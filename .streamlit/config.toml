@@ -1,0 +1,15 @@
+[theme]
+base = "light"
+primaryColor = "#80644F"
+backgroundColor = "#F8F6F3"
+secondaryBackgroundColor = "#F1ECE8"
+textColor = "#2F231E"
+
+[theme.sidebar]
+primaryColor = "#D8C4B3"
+backgroundColor = "#2F231E"
+secondaryBackgroundColor = "#4B392F"
+textColor = "#FFFFFF"
+
+[client]
+toolbarMode = "developer"
