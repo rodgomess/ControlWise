@@ -26,8 +26,11 @@ class SupabaseClient():
         
         self.table_products = self.supabase.table('products')
                 
-    def upsert_product(self, data):
+    def update_product2(self, data):
        self.table_products.upsert(data).execute()
+
+    def update_product(self, id, data):
+       response = self.table_products.update(data).eq("id", id).execute()
     
     def load_products(self):
         return self.table_products.select("*").execute().data

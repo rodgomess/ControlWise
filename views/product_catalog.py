@@ -1,4 +1,5 @@
 from datetime import date
+from urllib.parse import urlparse
 
 import pandas as pd
 import streamlit as st
@@ -19,6 +20,35 @@ DATE_COLUMNS = [
     "updated_date",
 ]
 
+EDITABLE_CATEGORIES = [
+    "Anel",
+    "Brinco",
+    "Colar",
+    "Conjunto",
+    "Pingente",
+    "Pulseira",
+    "Tornozeleira",
+    "Outro",
+]
+
+OPTIONAL_TEXT_FIELDS = {
+    "supplier_name",
+    "supplier_link",
+}
+
+FLOAT_FIELDS = {
+    "purchase_price",
+    "plating_price",
+    "selling_price",
+}
+
+INTEGER_FIELDS = {
+    "amount",
+    "plating_classification",
+}
+
+if "catalog_table_version" not in st.session_state:
+    st.session_state["catalog_table_version"] = 0
 
 @st.cache_resource
 def get_supabase_client() -> SupabaseClient:
@@ -29,7 +59,6 @@ def get_supabase_client() -> SupabaseClient:
 def load_products() -> list[dict]:
     client = get_supabase_client()
     return client.load_products() or []
-
 
 def prepare_products_dataframe(products: list[dict]) -> pd.DataFrame:
     expected_columns = [
@@ -115,6 +144,362 @@ def safe_range(
 
     return minimum, maximum
 
+def is_valid_url(value: str) -> bool:
+    """
+    Valida URLs opcionais.
+
+    Um campo vazio é considerado válido porque o link do fornecedor
+    não é obrigatório.
+    """
+    if not value:
+        return True
+
+    parsed_url = urlparse(value)
+
+    return (
+        parsed_url.scheme in {"http", "https"}
+        and bool(parsed_url.netloc)
+    )
+
+
+def normalize_product_value(
+    field: str,
+    value,
+):
+    """
+    Normaliza valores antes da comparação e antes do envio ao banco.
+    """
+
+    if field in OPTIONAL_TEXT_FIELDS:
+        if value is None:
+            return None
+
+        normalized_value = str(value).strip()
+
+        if normalized_value in {"", "Não informado"}:
+            return None
+
+        return normalized_value
+
+    if field in FLOAT_FIELDS:
+        return round(float(value or 0), 2)
+
+    if field in INTEGER_FIELDS:
+        return int(value or 0)
+
+    if value is None:
+        return ""
+
+    return str(value).strip()
+
+
+def build_update_payload(
+    original_product: dict,
+    edited_product: dict,
+) -> dict:
+    """
+    Cria um payload contendo o ID e somente os campos alterados.
+    """
+
+    payload = {
+        "id": str(original_product["id"]),
+    }
+
+    for field, edited_value in edited_product.items():
+        original_value = original_product.get(field)
+
+        normalized_original = normalize_product_value(
+            field,
+            original_value,
+        )
+
+        normalized_edited = normalize_product_value(
+            field,
+            edited_value,
+        )
+
+        if normalized_original != normalized_edited:
+            payload[field] = normalized_edited
+
+    return payload
+
+
+def validate_edited_product(
+    name: str,
+    amount: int,
+    purchase_price: float,
+    plating_price: float,
+    selling_price: float,
+    supplier_link: str,
+) -> list[str]:
+    errors: list[str] = []
+
+    if not name.strip():
+        errors.append("Informe o nome do produto.")
+
+    if amount < 0:
+        errors.append(
+            "A quantidade em estoque não pode ser negativa."
+        )
+
+    if purchase_price < 0:
+        errors.append(
+            "O preço de compra não pode ser negativo."
+        )
+
+    if plating_price < 0:
+        errors.append(
+            "O custo do banho não pode ser negativo."
+        )
+
+    if selling_price <= 0:
+        errors.append(
+            "O preço de venda deve ser maior que zero."
+        )
+
+    total_cost = purchase_price + plating_price
+
+    if selling_price < total_cost:
+        errors.append(
+            "O preço de venda está abaixo do custo total da peça."
+        )
+
+    if not is_valid_url(supplier_link.strip()):
+        errors.append(
+            "O link do fornecedor deve começar com "
+            "http:// ou https://."
+        )
+
+    return errors
+
+@st.dialog(
+    "Editar produto",
+    width="medium",
+    icon=":material/edit:",
+)
+def edit_product_dialog(product: dict) -> None:
+    product_id = str(product["id"])
+
+    current_name = str(product.get("name") or "")
+    current_category = str(
+        product.get("category") or "Outro"
+    )
+
+    current_amount = int(product.get("amount") or 0)
+
+    current_purchase_price = float(
+        product.get("purchase_price") or 0
+    )
+
+    current_plating_price = float(
+        product.get("plating_price") or 0
+    )
+
+    current_selling_price = float(
+        product.get("selling_price") or 0
+    )
+
+    current_plating_classification = int(
+        product.get("plating_classification") or 1
+    )
+
+    current_supplier_name = str(
+        product.get("supplier_name") or ""
+    )
+
+    if current_supplier_name == "Não informado":
+        current_supplier_name = ""
+
+    current_supplier_link = str(
+        product.get("supplier_link") or ""
+    )
+
+    category_options = EDITABLE_CATEGORIES.copy()
+
+    if current_category not in category_options:
+        category_options.insert(0, current_category)
+
+    category_index = category_options.index(
+        current_category
+    )
+
+    st.caption(f"ID do produto: `{product_id}`")
+
+    st.markdown(
+        f"""
+        **Produto selecionado:** {current_name}
+
+        Altere os campos necessários e confirme para salvar.
+        """
+    )
+
+    with st.form(
+        f"edit_product_form_{product_id}",
+    ):
+        name = st.text_input(
+            "Nome da peça",
+            value=current_name,
+        )
+
+        category_column, amount_column = st.columns(
+            [1.4, 0.6]
+        )
+
+        with category_column:
+            category = st.selectbox(
+                "Categoria",
+                options=category_options,
+                index=category_index,
+            )
+
+        with amount_column:
+            amount = st.number_input(
+                "Quantidade",
+                min_value=0,
+                value=current_amount,
+                step=1,
+            )
+
+        st.divider()
+
+        purchase_column, plating_column, selling_column = (
+            st.columns(3)
+        )
+
+        with purchase_column:
+            purchase_price = st.number_input(
+                "Preço de compra",
+                min_value=0.00,
+                value=current_purchase_price,
+                step=0.50,
+                format="%.2f",
+            )
+
+        with plating_column:
+            plating_price = st.number_input(
+                "Custo do banho",
+                min_value=0.00,
+                value=current_plating_price,
+                step=0.50,
+                format="%.2f",
+            )
+
+        with selling_column:
+            selling_price = st.number_input(
+                "Preço de venda",
+                min_value=0.00,
+                value=current_selling_price,
+                step=0.50,
+                format="%.2f",
+            )
+
+        total_cost = purchase_price + plating_price
+        estimated_profit = selling_price - total_cost
+
+        st.info(
+            (
+                f"Custo total: {currency_br(total_cost)} · "
+                f"Lucro estimado: "
+                f"{currency_br(estimated_profit)}"
+            ),
+            icon="💰",
+        )
+
+        st.divider()
+
+        plating_classification = st.slider(
+            "Classificação do banho",
+            min_value=1,
+            max_value=5,
+            value=current_plating_classification,
+        )
+
+        supplier_name = st.text_input(
+            "Nome do fornecedor",
+            value=current_supplier_name,
+        )
+
+        supplier_link = st.text_input(
+            "Link no fornecedor",
+            value=current_supplier_link,
+            placeholder="https://fornecedor.com/produto",
+        )
+
+        submitted = st.form_submit_button(
+            "Salvar alterações",
+            icon=":material/save:",
+            type="primary",
+            width="stretch",
+        )
+
+    if not submitted:
+        return
+
+    validation_errors = validate_edited_product(
+        name=name,
+        amount=int(amount),
+        purchase_price=float(purchase_price),
+        plating_price=float(plating_price),
+        selling_price=float(selling_price),
+        supplier_link=supplier_link,
+    )
+
+    if validation_errors:
+        for error in validation_errors:
+            st.error(error)
+
+        return
+
+    edited_product = {
+        "name": name,
+        "category": category,
+        "amount": int(amount),
+        "purchase_price": float(purchase_price),
+        "plating_price": float(plating_price),
+        "selling_price": float(selling_price),
+        "plating_classification": int(
+            plating_classification
+        ),
+        "supplier_name": supplier_name,
+        "supplier_link": supplier_link,
+    }
+
+    update_payload = build_update_payload(
+        original_product=product,
+        edited_product=edited_product,
+    )
+
+    # Quando há somente o ID, nenhum campo foi alterado.
+    if len(update_payload) == 1:
+        st.info(
+            "Nenhuma alteração foi identificada.",
+            icon="ℹ️",
+        )
+        return
+
+    try:
+        with st.spinner("Salvando alterações..."):
+            supabase.update_product(update_payload['id'], update_payload)
+
+        st.cache_data.clear()
+
+        st.session_state["catalog_update_message"] = (
+            f'Produto "{name.strip()}" atualizado com sucesso.'
+        )
+
+        # Troca a chave da tabela e elimina a seleção anterior.
+        st.session_state["catalog_table_version"] += 1
+
+        st.rerun(scope="app")
+
+    except Exception as error:
+        st.error(
+            "Não foi possível atualizar o produto. "
+            "Verifique a conexão com o Supabase."
+        )
+
+        with st.expander("Detalhes técnicos"):
+            st.exception(error)
 
 def apply_filters(dataframe: pd.DataFrame) -> pd.DataFrame:
     filtered = dataframe.copy()
@@ -345,6 +730,17 @@ render_page_hero(
     ),
 )
 
+update_message = st.session_state.pop(
+    "catalog_update_message",
+    None,
+)
+
+if update_message:
+    st.success(
+        update_message,
+        icon="✅",
+    )
+
 refresh_column, empty_column = st.columns([0.18, 0.82])
 
 with refresh_column:
@@ -464,12 +860,24 @@ column_order = [
     "id",
 ]
 
-st.dataframe(
+st.caption(
+    "Selecione uma linha da tabela para editar o produto."
+)
+
+edit_action_placeholder = st.empty()
+
+table_event = st.dataframe(
     display_dataframe,
+    key=(
+        "product_catalog_table_"
+        f"{st.session_state['catalog_table_version']}"
+    ),
     width="stretch",
     hide_index=True,
     height=540,
     column_order=column_order,
+    on_select="rerun",
+    selection_mode="single-row",
     column_config={
         "id": st.column_config.TextColumn(
             "ID do produto",
@@ -530,16 +938,71 @@ st.dataframe(
             format="DD/MM/YYYY HH:mm",
             width="medium",
         ),
-        "plating_classification": st.column_config.ProgressColumn(
-            "Nível do banho",
-            help="Classificação de 1 a 5.",
-            min_value=1,
-            max_value=5,
-            format="%d",
-            width="medium",
+        "plating_classification": (
+            st.column_config.ProgressColumn(
+                "Nível do banho",
+                help="Classificação de 1 a 5.",
+                min_value=1,
+                max_value=5,
+                format="%d",
+                width="medium",
+            )
         ),
     },
 )
+
+selected_rows = table_event.selection.rows
+
+with edit_action_placeholder.container():
+    if selected_rows:
+        selected_position = selected_rows[0]
+
+        if selected_position < len(filtered_dataframe):
+            selected_product = (
+                filtered_dataframe
+                .iloc[selected_position]
+                .to_dict()
+            )
+
+            action_column, product_column = st.columns(
+                [0.23, 0.77],
+                vertical_alignment="center",
+            )
+
+            with action_column:
+                edit_clicked = st.button(
+                    "Editar produto",
+                    icon=":material/edit:",
+                    type="primary",
+                    width="stretch",
+                )
+
+            with product_column:
+                selected_name = selected_product.get(
+                    "name",
+                    "",
+                )
+
+                selected_amount = int(
+                    selected_product.get("amount") or 0
+                )
+
+                st.markdown(
+                    (
+                        f"**Selecionado:** {selected_name}  \n"
+                        f"Estoque atual: "
+                        f"**{selected_amount} unidades**"
+                    )
+                )
+
+            if edit_clicked:
+                edit_product_dialog(selected_product)
+
+    else:
+        st.info(
+            "Clique em uma linha para habilitar a edição.",
+            icon=":material/touch_app:",
+        )
 
 csv_data = dataframe_for_export(filtered_dataframe).to_csv(
     index=False,
