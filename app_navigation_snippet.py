@@ -1,25 +1,12 @@
-import streamlit as st
+# No app.py, remova a página separada "Cadastrar produto"
+# e deixe o catálogo como a página principal de produtos.
 
-from ui.brand import render_app_logo
-from ui.styles import apply_global_styles
-
-
-st.set_page_config(
-    page_title="ControlWise",
-    page_icon="💎",
-    layout="wide",
-    # initial_sidebar_state="expanded",
-    initial_sidebar_state=320
-)
-
-apply_global_styles()
-render_app_logo()
-
-pages = [
+product_pages = [
     st.Page(
         "views/product_catalog.py",
         title="Catálogo de produtos",
         icon="📦",
+        default=True,
     ),
 ]
 
@@ -33,7 +20,7 @@ supplier_pages = [
 
 navigation = st.navigation(
     {
-        "Produtos": pages,
+        "Produtos": product_pages,
         "Fornecedores": supplier_pages,
     }
 )

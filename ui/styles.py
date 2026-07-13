@@ -301,7 +301,28 @@ def apply_global_styles() -> None:
             hr {
                 border-color: var(--cw-border) !important;
             }
-        </style>
+            
+            .st-key-delete_product_button button,
+            .st-key-confirm_delete_product_button button {
+                background-color: #B42318 !important;
+                border-color: #B42318 !important;
+                color: #FFFFFF !important;
+                font-weight: 700 !important;
+            }
+
+            .st-key-delete_product_button button:hover,
+            .st-key-confirm_delete_product_button button:hover {
+                background-color: #912018 !important;
+                border-color: #912018 !important;
+                color: #FFFFFF !important;
+            }
+
+            .st-key-delete_product_button button:focus,
+            .st-key-confirm_delete_product_button button:focus {
+                box-shadow: 0 0 0 0.2rem rgba(180, 35, 24, 0.25) !important;
+            }
+            
+            </style>
         """,
         unsafe_allow_html=True,
     )
