@@ -302,26 +302,139 @@ def apply_global_styles() -> None:
                 border-color: var(--cw-border) !important;
             }
             
-            .st-key-delete_product_button button,
-            .st-key-confirm_delete_product_button button {
+            /* =========================================================
+            Botões de exclusão
+            ========================================================= */
+
+            div[class*="st-key-delete_product_button_"] button,
+            div[class*="st-key-confirm_delete_product_button_"] button,
+            div[class*="st-key-delete_product_image_button_"] button,
+            div[class*="st-key-confirm_delete_product_image_button_"] button {
+                min-height: 42px;
+                border: 1px solid #B42318 !important;
+                border-radius: 10px;
+                background: #B42318 !important;
                 background-color: #B42318 !important;
-                border-color: #B42318 !important;
                 color: #FFFFFF !important;
                 font-weight: 700 !important;
             }
 
-            .st-key-delete_product_button button:hover,
-            .st-key-confirm_delete_product_button button:hover {
-                background-color: #912018 !important;
+            /* Mantém texto e ícone brancos */
+            div[class*="st-key-delete_product_button_"] button *,
+            div[class*="st-key-confirm_delete_product_button_"] button *,
+            div[class*="st-key-delete_product_image_button_"] button *,
+            div[class*="st-key-confirm_delete_product_image_button_"] button * {
+                color: #FFFFFF !important;
+                fill: #FFFFFF !important;
+            }
+
+            /* Hover */
+            div[class*="st-key-delete_product_button_"] button:hover,
+            div[class*="st-key-confirm_delete_product_button_"] button:hover,
+            div[class*="st-key-delete_product_image_button_"] button:hover,
+            div[class*="st-key-confirm_delete_product_image_button_"] button:hover {
                 border-color: #912018 !important;
+                background: #912018 !important;
+                background-color: #912018 !important;
                 color: #FFFFFF !important;
             }
 
-            .st-key-delete_product_button button:focus,
-            .st-key-confirm_delete_product_button button:focus {
-                box-shadow: 0 0 0 0.2rem rgba(180, 35, 24, 0.25) !important;
+            /* Foco */
+            div[class*="st-key-delete_product_button_"] button:focus,
+            div[class*="st-key-confirm_delete_product_button_"] button:focus,
+            div[class*="st-key-delete_product_image_button_"] button:focus,
+            div[class*="st-key-confirm_delete_product_image_button_"] button:focus {
+                border-color: #912018 !important;
+                background: #912018 !important;
+                background-color: #912018 !important;
+                color: #FFFFFF !important;
+                box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.22) !important;
             }
-            
+
+            /* Botão de deletar foto sem imagem */
+            div[class*="st-key-delete_product_image_button_"] button:disabled {
+                background: #ded8d3 !important;
+                background-color: #ded8d3 !important;
+                border-color: #d2cbc6 !important;
+                color: #948a83 !important;
+                opacity: 0.65 !important;
+                cursor: not-allowed !important;
+                box-shadow: none !important;
+                transform: none !important;
+            }
+
+            div[class*="st-key-delete_product_image_button_"] button:disabled:hover {
+                background: #ded8d3 !important;
+                background-color: #ded8d3 !important;
+                border-color: #d2cbc6 !important;
+                color: #948a83 !important;
+                box-shadow: none !important;
+                transform: none !important;
+            }
+
+            div[class*="st-key-delete_product_image_button_"] button:disabled * {
+                color: #948a83 !important;
+                fill: #948a83 !important;
+            }
+
+            /* Botões de exclusão de fornecedor */
+            div[class*="st-key-delete_supplier_button_"] button,
+            div[class*="st-key-confirm_delete_supplier_button_"] button {
+                min-height: 42px;
+                border: 1px solid #B42318 !important;
+                border-radius: 10px;
+                background: #B42318 !important;
+                background-color: #B42318 !important;
+                color: #FFFFFF !important;
+                font-weight: 700 !important;
+            }
+
+            div[class*="st-key-delete_supplier_button_"] button *,
+            div[class*="st-key-confirm_delete_supplier_button_"] button * {
+                color: #FFFFFF !important;
+                fill: #FFFFFF !important;
+            }
+
+            div[class*="st-key-delete_supplier_button_"] button:hover,
+            div[class*="st-key-confirm_delete_supplier_button_"] button:hover {
+                border-color: #912018 !important;
+                background: #912018 !important;
+                background-color: #912018 !important;
+                color: #FFFFFF !important;
+            }
+
+            div[class*="st-key-delete_supplier_button_"] button:focus,
+            div[class*="st-key-confirm_delete_supplier_button_"] button:focus {
+                border-color: #912018 !important;
+                background: #912018 !important;
+                background-color: #912018 !important;
+                color: #FFFFFF !important;
+                box-shadow:
+                    0 0 0 3px rgba(180, 35, 24, 0.22) !important;
+            }
+
+            /* Exclusão de preços de banho */
+            div[class*="st-key-delete_plating_price_button_"] button,
+            div[class*="st-key-confirm_delete_plating_price_button_"] button {
+                border: 1px solid #B42318 !important;
+                background: #B42318 !important;
+                background-color: #B42318 !important;
+                color: #FFFFFF !important;
+                font-weight: 700 !important;
+            }
+
+            div[class*="st-key-delete_plating_price_button_"] button *,
+            div[class*="st-key-confirm_delete_plating_price_button_"] button * {
+                color: #FFFFFF !important;
+                fill: #FFFFFF !important;
+            }
+
+            div[class*="st-key-delete_plating_price_button_"] button:hover,
+            div[class*="st-key-confirm_delete_plating_price_button_"] button:hover {
+                border-color: #912018 !important;
+                background: #912018 !important;
+                background-color: #912018 !important;
+                color: #FFFFFF !important;
             </style>
         """,
         unsafe_allow_html=True,
