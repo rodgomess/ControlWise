@@ -9,6 +9,7 @@ O ControlWise centraliza o cadastro de produtos e automatiza o acompanhamento de
 ## 📋 Índice
 
 - [Visão Geral](#-visão-geral)
+- [Demonstrações](#-demonstrações)
 - [Funcionalidades](#-funcionalidades)
 - [Tecnologias Utilizadas](#-tecnologias-utilizadas)
 - [Arquitetura](#-arquitetura)
@@ -30,6 +31,12 @@ O sistema é dividido em dois grandes módulos, integrados entre si:
 | **Fornecedores de Banho** | Cadastro de fornecedores, preços por grama e classificações de banho/acabamento |
 
 A relação entre os módulos permite que o custo do banho de cada produto seja **calculado e atualizado automaticamente** conforme os preços cadastrados na tabela de fornecedores.
+
+---
+
+## 📷 Demonstrações
+
+https://github.com/user-attachments/assets/db7d4c08-535e-4cfc-822f-6ccb1b32932c
 
 ---
 
