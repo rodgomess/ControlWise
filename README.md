@@ -110,3 +110,106 @@ A relação entre os módulos permite que o custo do banho de cada produto seja 
 ## 🏗️ Arquitetura
 
 O projeto segue uma arquitetura em camadas, separando interface, regras de negócio e acesso a dados:
+
+```
+Interface
+    ↓
+Features
+    ↓
+Regras de negócio
+    ↓
+Services
+    ↓
+Supabase
+```
+
+Estrutura de pastas:
+
+```
+pages/
+    product_catalog.py
+    plating_suppliers.py
+
+src/
+    features/
+        products/
+        plating/
+
+    shared/
+
+    services/
+        supabase.py
+
+ui/
+    styles.py
+```
+
+Essa separação evita concentrar toda a lógica do sistema diretamente nos arquivos das páginas, facilitando manutenção e evolução do projeto.
+
+---
+
+## 🧮 Modelo de Cálculo do Banho
+
+O custo do banho segue a cadeia:
+
+```
+Produto → Fornecedor de banho → Metal → Classificação → Preço por grama
+```
+
+**Fórmula:**
+
+```
+Custo do banho = Peso da peça × Preço do banho por grama
+```
+
+**Exemplo:**
+
+```
+Peso: 5 g
+Preço do banho: R$ 3,00/g
+Custo do banho: 5 × 3 = R$ 15,00
+```
+
+Se nenhum dado de banho for informado, o custo é `R$ 0,00`. Caso qualquer campo seja preenchido, o conjunto completo (fornecedor, metal e classificação) passa a ser obrigatório.
+
+---
+
+## 💵 Cálculo Financeiro
+
+| Métrica | Fórmula |
+|---|---|
+| Custo total | Preço de compra + Custo do banho |
+| Lucro estimado | Preço de venda − Preço de compra − Custo do banho |
+| Margem estimada | (Lucro ÷ Preço de venda) × 100 |
+
+---
+
+## 📁 Exportação de Dados
+
+| Dado | Arquivo gerado |
+|---|---|
+| Produtos | `produtos_controlwise.csv` |
+| Fornecedores | `fornecedores_wisecontrol.csv` |
+| Preços de banho | `precos_banho_wisecontrol.csv` |
+
+Todos os arquivos usam encoding UTF-8, separador `;`, decimal `,` e datas no padrão brasileiro.
+
+---
+
+## 🧹 Tratamento de Dados e Erros
+
+- Normalização de preços, quantidades, classificações, datas e textos vindos do Supabase
+- Comparação de metais case-insensitive para evitar duplicidade
+- Conversão de datas para o fuso `America/Sao_Paulo`, exibidas no formato `dd/mm/aaaa hh:mm`
+- Tratamento de falhas secundárias (ex: exclusão de produto bem-sucedida mesmo se a remoção da imagem falhar)
+- Mensagens claras de sucesso, aviso e erro para todas as operações críticas
+
+---
+
+## 🎯 Objetivo do Projeto
+
+O ControlWise tem como objetivo evoluir para uma **plataforma centralizada de gestão operacional e financeira**, permitindo acompanhar produtos, estoque, fornecedores e custos em um único ambiente. Sua arquitetura modular permite adicionar novas funcionalidades progressivamente, sem concentrar a lógica de negócio nas páginas da aplicação.
+
+---
+
+<p align="center">Desenvolvido com 💻 em Python + Streamlit</p>
