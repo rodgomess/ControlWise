@@ -212,4 +212,4 @@ O ControlWise tem como objetivo evoluir para uma **plataforma centralizada de ge
 
 ---
 
-<p align="center">Desenvolvido com 💻 em Python + Streamlit</p>
+<p align="center">Desenvolvido por Rodrigo Gomes</p>
